@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Flag Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f9;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Feature Flag Manager</h2>
+    <div class="card">
+        <h3>DARK_MODE</h3>
+        <p>Status: <b id="statusText">Loading...</b></p>
+        <label class="switch">
+            <input type="checkbox" id="toggleBtn" onchange="toggleFlag()">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <script>
+        async function loadFlag() {
+            try {
+                const res = await fetch('/api/flags');
+                const flags = await res.json();
+                const darkFlag = flags.find(f => f.name === 'DARK_MODE');
+                if (darkFlag) {
+                    document.getElementById('toggleBtn').checked = darkFlag.enabled;
+                    document.getElementById('statusText').innerText = darkFlag.enabled ? "ON" : "OFF";
+                }
+            } catch (err) {
+                console.error("Error fetching flags:", err);
+            }
+        }
+
+        async function toggleFlag() {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const newState = toggleBtn.checked;
+            
+            // Instantly reflect UI change
+            document.getElementById('statusText').innerText = newState ? "ON" : "OFF";
+
+            // Send PUT request to toggle flag status
+            try {
+                await fetch(`/api/flags/DARK_MODE/toggle?enabled=${newState}`, { 
+                    method: 'PUT' 
+                });
+            } catch (err) {
+                console.error("Error updating flag:", err);
+            }
+
+            // Sync with backend state
+            loadFlag();
+        }
+
+        // Initialize state on page load
+        loadFlag();
+    </script>
+</body>
+</html>

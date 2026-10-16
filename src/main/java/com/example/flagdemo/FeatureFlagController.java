@@ -11,6 +11,7 @@ import java.util.Map;
 public class FeatureFlagController {
 
     private final FeatureFlagService service;
+    
 
     public FeatureFlagController(FeatureFlagService service) {
         this.service = service;
@@ -37,6 +38,7 @@ public class FeatureFlagController {
     // 3. TOGGLE FLAG (UPDATE)
     @PutMapping("/{name}/toggle")
     public ResponseEntity<FeatureFlag> toggleFlag(@PathVariable String name, @RequestParam boolean enabled) {
+        
         return service.toggleFlag(name, enabled)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
